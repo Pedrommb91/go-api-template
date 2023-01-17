@@ -12,24 +12,28 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/internal/router"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	log    logger.Logger
+	cfg    *config.Config
+	log    *logger.Logger
 	engine *gin.Engine
 	server *http.Server
 }
 
-func NewServer(l logger.Logger) *Server {
+func NewServer(c *config.Config, l *logger.Logger) *Server {
 	handler := gin.New()
 	return &Server{
+		cfg:    c,
 		log:    l,
 		engine: handler,
 		server: &http.Server{
-			Addr:              ":8080",
+			Addr:              c.API.Address,
 			Handler:           handler,
 			ReadHeaderTimeout: time.Second * 30,
 		},
@@ -37,13 +41,21 @@ func NewServer(l logger.Logger) *Server {
 }
 
 func (s *Server) ServerConfigure() {
+	if len(s.cfg.API.CORSAllowOrigins) > 0 {
+		conf := cors.DefaultConfig()
+		conf.AllowOrigins = s.cfg.API.CORSAllowOrigins
+		conf.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+		conf.AllowCredentials = true
+		s.engine.Use(cors.New(conf))
+	}
+
 	s.engine.NoRoute(func(ctx *gin.Context) {
 		s.log.Error("Route not found")
 	})
 }
 
 func (s *Server) SetRoutes() {
-	router.NewRouter(s.engine, &s.log)
+	router.NewRouter(s.engine, s.log, s.cfg)
 }
 
 func (s *Server) Run() {
@@ -56,9 +68,10 @@ func (s *Server) Run() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			s.log.Fatal("listen: %s\n", err)
 		}
-	}(&s.log)
+	}(s.log)
 
-	s.log.Info("App started")
+	s.log.Info("%s started", s.cfg.App.Name)
+	s.log.Info("version: %s", s.cfg.App.Version)
 
 	// Listen for the interrupt signal.
 	<-ctx.Done()
