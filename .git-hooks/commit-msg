@@ -1,0 +1,12 @@
+#!/bin/sh
+
+commit_message="$1"
+
+commit_validation=$(egrep '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\([[:alnum:]._-]+\))?(!)?: ([[:alnum:]])+([[:space:][:print:]]*)' $commit_message)
+
+if [ -z "$commit_validation" ];
+then
+	echo "Invalid commit message. You must follow the conventional commits format"
+	exit 1
+fi
+exit 0
