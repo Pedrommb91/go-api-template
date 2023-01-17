@@ -1,3 +1,8 @@
+//go:generate oapi-codegen -old-config-style -generate gin -o openapi/openapi_gin.gen.go -package openapi ../../spec/openapi.yaml
+//go:generate oapi-codegen -old-config-style -generate spec -o openapi/openapi_spec.gen.go -package openapi ../../spec/openapi.yaml
+//go:generate oapi-codegen -old-config-style -generate types -o openapi/openapi_types.gen.go -package openapi ../../spec/openapi.yaml
+//go:generate oapi-codegen -old-config-style -generate client -o openapi/openapi_client.gen.go -package openapi ../../spec/openapi.yaml
+
 package api
 
 import (
@@ -7,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Pedrommb91/go-api-template/internal/router"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +43,7 @@ func (s *Server) ServerConfigure() {
 }
 
 func (s *Server) SetRoutes() {
-
+	router.NewRouter(s.engine, &s.log)
 }
 
 func (s *Server) Run() {
