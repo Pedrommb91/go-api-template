@@ -7,7 +7,7 @@ servers:
 paths:
   /greeting/{name}:
     get:
-      operationId: getHelloWorld
+      operationId: getHelloWorldHandler
       tags:
         - Greetings
       description: Gets a greeting with the given name

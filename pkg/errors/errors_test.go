@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"git.daimler.com/cns/order-api/pkg/logger"
+	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/rs/zerolog"
 )
 

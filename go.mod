@@ -3,7 +3,6 @@ module github.com/Pedrommb91/go-api-template
 go 1.19
 
 require (
-	git.daimler.com/cns/order-api v0.0.10
 	github.com/deepmap/oapi-codegen v1.11.0
 	github.com/getkin/kin-openapi v0.103.0
 	github.com/gin-contrib/cors v1.4.0

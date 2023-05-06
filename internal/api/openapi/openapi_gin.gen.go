@@ -15,7 +15,7 @@ import (
 type ServerInterface interface {
 
 	// (GET /greeting/{name})
-	GetHelloWorld(c *gin.Context, name string)
+	GetHelloWorldHandler(c *gin.Context, name string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -27,8 +27,8 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(c *gin.Context)
 
-// GetHelloWorld operation middleware
-func (siw *ServerInterfaceWrapper) GetHelloWorld(c *gin.Context) {
+// GetHelloWorldHandler operation middleware
+func (siw *ServerInterfaceWrapper) GetHelloWorldHandler(c *gin.Context) {
 
 	var err error
 
@@ -47,7 +47,7 @@ func (siw *ServerInterfaceWrapper) GetHelloWorld(c *gin.Context) {
 		middleware(c)
 	}
 
-	siw.Handler.GetHelloWorld(c, name)
+	siw.Handler.GetHelloWorldHandler(c, name)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -79,7 +79,7 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.GET(options.BaseURL+"/greeting/:name", wrapper.GetHelloWorld)
+	router.GET(options.BaseURL+"/greeting/:name", wrapper.GetHelloWorldHandler)
 
 	return router
 }

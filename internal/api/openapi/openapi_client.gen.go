@@ -88,12 +88,12 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetHelloWorld request
-	GetHelloWorld(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetHelloWorldHandler request
+	GetHelloWorldHandler(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetHelloWorld(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetHelloWorldRequest(c.Server, name)
+func (c *Client) GetHelloWorldHandler(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHelloWorldHandlerRequest(c.Server, name)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +104,8 @@ func (c *Client) GetHelloWorld(ctx context.Context, name string, reqEditors ...R
 	return c.Client.Do(req)
 }
 
-// NewGetHelloWorldRequest generates requests for GetHelloWorld
-func NewGetHelloWorldRequest(server string, name string) (*http.Request, error) {
+// NewGetHelloWorldHandlerRequest generates requests for GetHelloWorldHandler
+func NewGetHelloWorldHandlerRequest(server string, name string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -181,11 +181,11 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetHelloWorld request
-	GetHelloWorldWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetHelloWorldResponse, error)
+	// GetHelloWorldHandler request
+	GetHelloWorldHandlerWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetHelloWorldHandlerResponse, error)
 }
 
-type GetHelloWorldResponse struct {
+type GetHelloWorldHandlerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *map[string]interface{}
@@ -193,7 +193,7 @@ type GetHelloWorldResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetHelloWorldResponse) Status() string {
+func (r GetHelloWorldHandlerResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -201,31 +201,31 @@ func (r GetHelloWorldResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetHelloWorldResponse) StatusCode() int {
+func (r GetHelloWorldHandlerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetHelloWorldWithResponse request returning *GetHelloWorldResponse
-func (c *ClientWithResponses) GetHelloWorldWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetHelloWorldResponse, error) {
-	rsp, err := c.GetHelloWorld(ctx, name, reqEditors...)
+// GetHelloWorldHandlerWithResponse request returning *GetHelloWorldHandlerResponse
+func (c *ClientWithResponses) GetHelloWorldHandlerWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetHelloWorldHandlerResponse, error) {
+	rsp, err := c.GetHelloWorldHandler(ctx, name, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetHelloWorldResponse(rsp)
+	return ParseGetHelloWorldHandlerResponse(rsp)
 }
 
-// ParseGetHelloWorldResponse parses an HTTP response from a GetHelloWorldWithResponse call
-func ParseGetHelloWorldResponse(rsp *http.Response) (*GetHelloWorldResponse, error) {
+// ParseGetHelloWorldHandlerResponse parses an HTTP response from a GetHelloWorldHandlerWithResponse call
+func ParseGetHelloWorldHandlerResponse(rsp *http.Response) (*GetHelloWorldHandlerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetHelloWorldResponse{
+	response := &GetHelloWorldHandlerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

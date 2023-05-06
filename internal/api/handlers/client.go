@@ -1,4 +1,4 @@
-package service
+package handlers
 
 import (
 	"github.com/Pedrommb91/go-api-template/config"

@@ -1,4 +1,4 @@
-package service
+package handlers
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 // (GET /greeting/{name})
-func (g *client) GetHelloWorld(c *gin.Context, name string) {
+func (g *client) GetHelloWorldHandler(c *gin.Context, name string) {
 	if name == "D. Sebastian" {
 		msg := "D. Sebastian did not appear yet"
 		g.log.Error(msg)

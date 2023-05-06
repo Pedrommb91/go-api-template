@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"git.daimler.com/cns/order-api/config"
+	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/stretchr/testify/assert"
 )
 
