@@ -3,10 +3,14 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/rs/zerolog"
+	uuid "github.com/satori/go.uuid"
 )
+
+var NewUUID = uuid.NewV4
 
 const (
 	Unexpected          = Kind(0)
@@ -15,8 +19,24 @@ const (
 	Unauthorized        = Kind(http.StatusUnauthorized)
 	Forbidden           = Kind(http.StatusForbidden)
 	NotFound            = Kind(http.StatusNotFound)
+	RequestTimeout      = Kind(http.StatusRequestTimeout)
+	Conflict            = Kind(http.StatusConflict)
 	InternalServerError = Kind(http.StatusInternalServerError)
+	BadGateway          = Kind(http.StatusBadGateway)
 )
+
+var kindLookUp = map[Kind]string{
+	Unexpected:          "Unexpected Error",
+	NoContent:           "No Content",
+	BadRequest:          "Bad Request",
+	BadGateway:          "Bad Gateway",
+	Unauthorized:        "Unauthorized",
+	Forbidden:           "Forbidden",
+	NotFound:            "Not Found",
+	RequestTimeout:      "Request Timeout",
+	Conflict:            "Conflict",
+	InternalServerError: "Internal server error",
+}
 
 type ErrorOption func(*Error)
 
@@ -38,6 +58,12 @@ func KindBadRequest() ErrorOption {
 	}
 }
 
+func KindBadGateway() ErrorOption {
+	return func(e *Error) {
+		e.Kind = BadGateway
+	}
+}
+
 func KindUnauthorized() ErrorOption {
 	return func(e *Error) {
 		e.Kind = Unauthorized
@@ -56,6 +82,18 @@ func KindNotFound() ErrorOption {
 	}
 }
 
+func KindConflit() ErrorOption {
+	return func(e *Error) {
+		e.Kind = Conflict
+	}
+}
+
+func KindRequestTimout() ErrorOption {
+	return func(e *Error) {
+		e.Kind = RequestTimeout
+	}
+}
+
 func KindInternalServerError() ErrorOption {
 	return func(e *Error) {
 		e.Kind = InternalServerError
@@ -64,22 +102,10 @@ func KindInternalServerError() ErrorOption {
 
 func WithKind(k Kind) ErrorOption {
 	return func(e *Error) {
-		switch k {
-		case Unexpected:
-			fallthrough
-		case NoContent:
-			fallthrough
-		case BadRequest:
-			fallthrough
-		case Unauthorized:
-			fallthrough
-		case Forbidden:
-			fallthrough
-		case NotFound:
-			fallthrough
-		case InternalServerError:
+		_, ok := kindLookUp[k]
+		if ok {
 			e.Kind = k
-		default:
+		} else {
 			e.Kind = Unexpected
 		}
 	}
@@ -98,14 +124,34 @@ func WithSeverity(s zerolog.Level) ErrorOption {
 }
 
 func WithError(err error) ErrorOption {
+	er, ok := err.(*Error)
+	var id string
+
+	if ok {
+		id = er.ID
+	} else {
+		id = generateID()
+	}
+
 	return func(e *Error) {
 		e.Err = err
+		e.ID = id
 	}
 }
 
-func WithLevel(l zerolog.Level) ErrorOption {
+func WithID(id string) ErrorOption {
+	if id == "" {
+		id = generateID()
+	}
+
 	return func(e *Error) {
-		e.Severity = l
+		e.ID = id
+	}
+}
+
+func WithMessage(msg string) ErrorOption {
+	return func(e *Error) {
+		e.Message = msg
 	}
 }
 
@@ -113,30 +159,19 @@ type Op string
 type Kind int
 
 func (k Kind) String() string {
-	switch k {
-	case Unexpected:
-		return "Unexpected Error"
-	case NoContent:
-		return "No Content"
-	case BadRequest:
-		return "Bad Request"
-	case Unauthorized:
-		return "Unauthorized"
-	case Forbidden:
-		return "Forbidden"
-	case NotFound:
-		return "Not Found"
-	case InternalServerError:
-		return "Internal server error"
-	default:
-		return "Unexpected Error"
+	s, ok := kindLookUp[k]
+	if ok {
+		return s
 	}
+
+	return "Unexpected Error"
 }
 
 func (k Kind) Int() int {
 	if k == Unexpected {
 		return http.StatusInternalServerError
 	}
+
 	return int(k)
 }
 
@@ -144,7 +179,9 @@ type Error struct {
 	Op       Op    // operation
 	Kind     Kind  // category of errors
 	Err      error // the wrapped error
+	Message  string
 	Severity zerolog.Level
+	ID       string
 }
 
 func (e *Error) Error() string {
@@ -153,13 +190,38 @@ func (e *Error) Error() string {
 
 func Build(ops ...ErrorOption) *Error {
 	e := &Error{}
+	e.Kind = Unexpected
+
 	for _, op := range ops {
 		op(e)
 	}
+
+	if e.Err == nil {
+		e.Err = fmt.Errorf("no error")
+	}
+
+	if e.ID == "" {
+		e.ID = generateID()
+	}
+
+	if e.Severity == zerolog.TraceLevel {
+		e.Severity = zerolog.WarnLevel
+	}
+
+	if e.Op == "" {
+		e.Op = "No operation found"
+	}
+
+	if e.Message == "" {
+		e.Message = "No message"
+	}
+
+	LogErrorWithSeverity(logger.New(e.Severity.String()), e.Severity, e)
+
 	return e
 }
 
-// Creates a list with all recursive operations
+// Creates a list with all recursive operations.
 func Ops(e *Error) []Op {
 	res := []Op{e.Op}
 
@@ -168,11 +230,28 @@ func Ops(e *Error) []Op {
 		return res
 	}
 
-	res = append(res, Ops(subErr)...)
-	return res
+	return append(res, Ops(subErr)...)
 }
 
-// Logs the error by level
+func GetFirstNestedError(e error) error {
+	err, ok := e.(*Error)
+	if !ok {
+		return e
+	}
+
+	for {
+		subErr, ok := err.Err.(*Error)
+		if ok {
+			err = subErr
+		} else {
+			break
+		}
+	}
+
+	return err
+}
+
+// Logs the error by level.
 func LogError(l logger.Interface, err error) {
 	ll, ok := l.(*logger.Logger)
 	if !ok {
@@ -186,15 +265,86 @@ func LogError(l logger.Interface, err error) {
 		return
 	}
 
-	ll.LogSysErr(sysErr.Severity, fmt.Sprintf("%s: %s", string(sysErr.Op), sysErr.Error()))
+	ll.LogSysErr(sysErr.Severity, fmt.Sprintf("[%s]%s: %s", sysErr.ID, string(sysErr.Op), sysErr.Error()))
 }
 
-func Equal(e1 *Error, e2 *Error) bool {
+func LogErrorWithSeverity(l logger.Interface, severity zerolog.Level, err error) {
+	ll, ok := l.(*logger.Logger)
+	if !ok {
+		l.Error(err)
+		return
+	}
+
+	sysErr, ok := err.(*Error)
+	if !ok {
+		ll.Error(err)
+		return
+	}
+
+	ll.LogSysErr(severity, fmt.Sprintf("[%s]%s: %s - %s", sysErr.ID, string(sysErr.Op), sysErr.Message, sysErr.Err.Error()))
+}
+
+func Equal(e1 error, e2 error) bool {
 	if e1 == nil && e2 == nil {
 		return true
 	}
+
 	if (e1 != nil && e2 == nil) || (e1 == nil && e2 != nil) {
 		return false
 	}
-	return e1.Err.Error() == e2.Err.Error() && e1.Kind == e2.Kind && e1.Op == e2.Op && e1.Severity == e2.Severity
+
+	err1, ok1 := e1.(*Error)
+	err2, ok2 := e2.(*Error)
+
+	if ok1 != ok2 {
+		return false
+	}
+	if !ok1 && !ok2 {
+		return reflect.DeepEqual(e1, e2)
+	}
+
+	if (err1 == nil && err2 == nil) || (e1 == nil && err2 == nil) || (err1 == nil && e2 == nil) {
+		return true
+	}
+
+	if (err1 != nil && err2 == nil) || (err1 == nil && err2 != nil) {
+		return false
+	}
+
+	return err1.Err.Error() == err2.Err.Error() &&
+		err1.Kind == err2.Kind &&
+		err1.Op == err2.Op &&
+		err1.Severity == err2.Severity &&
+		err1.Message == err2.Message
+}
+
+func generateID() string {
+	idstr := NewUUID().String()
+	return idstr
+}
+
+// if er is nil it creates an unauthorized error
+func UnauthorizedError(op Op, er error) *Error {
+	if er == nil {
+		er = fmt.Errorf("unauthorized")
+	}
+	return Build(
+		WithOp(op),
+		WithError(er),
+		WithMessage("Unauthorized"),
+		KindUnauthorized(),
+	)
+}
+
+// if er is nil it creates an unexpected error
+func UnexpectedError(op Op, er error) *Error {
+	if er == nil {
+		er = fmt.Errorf("unexpected error")
+	}
+	return Build(
+		WithOp(op),
+		WithError(er),
+		WithMessage("Unexpected error occurred"),
+		WithSeverity(zerolog.ErrorLevel),
+	)
 }

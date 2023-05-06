@@ -14,6 +14,7 @@ const (
 // Error defines model for Error.
 type Error struct {
 	Error     string    `json:"error"`
+	Id        string    `json:"id"`
 	Message   string    `json:"message"`
 	Path      string    `json:"path"`
 	Status    int32     `json:"status"`

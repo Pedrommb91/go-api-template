@@ -10,6 +10,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
+	id := "dummy-id"
 	type args struct {
 		ops []ErrorOption
 	}
@@ -20,22 +21,36 @@ func TestBuild(t *testing.T) {
 	}{
 		{
 			name: "When dont send an error",
-			args: args{},
-			want: &Error{},
+			args: args{[]ErrorOption{WithID(id)}},
+			want: &Error{
+				Kind:     Unexpected,
+				Err:      fmt.Errorf("no error"),
+				Severity: zerolog.DebugLevel,
+				ID:       id,
+				Op:       "No operation found",
+				Message:  "No message",
+			},
 		},
 		{
 			name: "When send an error",
 			args: args{[]ErrorOption{
 				KindForbidden(),
+				WithSeverity(zerolog.WarnLevel),
 			}},
 			want: &Error{
-				Kind: Forbidden,
+				Err:      fmt.Errorf("no error"),
+				Kind:     Forbidden,
+				ID:       id,
+				Severity: zerolog.WarnLevel,
+				Op:       "No operation found",
+				Message:  "No message",
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Build(tt.args.ops...); !reflect.DeepEqual(got, tt.want) {
+			if got := Build(tt.args.ops...); !Equal(got, tt.want) {
 				t.Errorf("Build() = %v, want %v", got, tt.want)
 			}
 		})
@@ -62,6 +77,7 @@ func TestError_Error(t *testing.T) {
 			want: string("Internal Server Error"),
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &Error{
@@ -81,16 +97,12 @@ func TestOps(t *testing.T) {
 	err := Build(
 		WithOp(Op("TestOps")),
 		WithError(fmt.Errorf("Internal Server Error")),
-		WithLevel(zerolog.DebugLevel),
-		KindUnexpected(),
 		WithSeverity(zerolog.ErrorLevel),
 	)
 
 	err1 := Build(
 		WithOp(Op("Nested.Error")),
 		WithError(err),
-		WithLevel(zerolog.DebugLevel),
-		KindUnexpected(),
 		WithSeverity(zerolog.ErrorLevel),
 	)
 
@@ -113,6 +125,7 @@ func TestOps(t *testing.T) {
 			want: []Op{err1.Op, err.Op},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Ops(tt.args.e); !reflect.DeepEqual(got, tt.want) {
@@ -126,7 +139,6 @@ func TestLogError(t *testing.T) {
 	err := Build(
 		WithOp(Op(fmt.Errorf("").Error())),
 		WithError(fmt.Errorf("Internal Server Error")),
-		KindUnexpected(),
 		WithSeverity(zerolog.ErrorLevel),
 	)
 	type args struct {
@@ -146,6 +158,7 @@ func TestLogError(t *testing.T) {
 			args: args{logger.New("debug"), fmt.Errorf("wrong error")},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			LogError(tt.args.l, tt.args.err)
@@ -157,7 +170,6 @@ func TestEqual(t *testing.T) {
 	err := Build(
 		WithOp(Op(fmt.Errorf("").Error())),
 		WithError(fmt.Errorf("Internal Server Error")),
-		KindUnexpected(),
 		WithSeverity(zerolog.ErrorLevel),
 	)
 
@@ -165,7 +177,6 @@ func TestEqual(t *testing.T) {
 		WithOp(Op(fmt.Errorf("").Error())),
 		WithError(fmt.Errorf("BadRequest")),
 		KindBadRequest(),
-		WithSeverity(zerolog.ErrorLevel),
 	)
 	type args struct {
 		e1 *Error
@@ -178,7 +189,7 @@ func TestEqual(t *testing.T) {
 	}{
 		{
 			name: "When error are nil",
-			args: args{nil, nil},
+			args: args{e1: nil, e2: nil},
 			want: true,
 		},
 		{
@@ -192,6 +203,7 @@ func TestEqual(t *testing.T) {
 			want: false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Equal(tt.args.e1, tt.args.e2); got != tt.want {
@@ -223,6 +235,11 @@ func TestKind_String(t *testing.T) {
 			want: "Bad Request",
 		},
 		{
+			name: "Bad gateway error",
+			k:    BadGateway,
+			want: "Bad Gateway",
+		},
+		{
 			name: "Unauthorized error",
 			k:    Unauthorized,
 			want: "Unauthorized",
@@ -236,6 +253,11 @@ func TestKind_String(t *testing.T) {
 			name: "not found error",
 			k:    NotFound,
 			want: "Not Found",
+		},
+		{
+			name: "time out error",
+			k:    RequestTimeout,
+			want: "Request Timeout",
 		},
 		{
 			name: "Internal server error",
@@ -284,6 +306,7 @@ func TestKind_Int(t *testing.T) {
 }
 
 func TestWithKind(t *testing.T) {
+	id := "dummy-id"
 	type args struct {
 		k Kind
 	}
@@ -297,14 +320,14 @@ func TestWithKind(t *testing.T) {
 			args: args{
 				k: Unexpected,
 			},
-			want: Build(KindUnexpected()),
+			want: Build(WithID(id)),
 		},
 		{
 			name: "When Not Found",
 			args: args{
 				k: NotFound,
 			},
-			want: Build(KindNotFound()),
+			want: Build(KindNotFound(), WithID(id)),
 		},
 
 		{
@@ -312,34 +335,79 @@ func TestWithKind(t *testing.T) {
 			args: args{
 				k: InternalServerError,
 			},
-			want: Build(KindInternalServerError()),
+			want: Build(KindInternalServerError(), WithID(id)),
+		},
+		{
+			name: "When Bad request",
+			args: args{
+				k: BadRequest,
+			},
+			want: Build(KindBadRequest(), WithID(id)),
+		},
+		{
+			name: "When Bad gateway",
+			args: args{
+				k: BadGateway,
+			},
+			want: Build(KindBadGateway(), WithID(id)),
 		},
 		{
 			name: "When Unauthorized",
 			args: args{
 				k: Unauthorized,
 			},
-			want: Build(KindUnauthorized()),
+			want: Build(KindUnauthorized(), WithID(id)),
 		},
 		{
 			name: "When No Content",
 			args: args{
 				k: NoContent,
 			},
-			want: Build(KindNoContent()),
+			want: Build(KindNoContent(), WithID(id)),
 		},
 		{
 			name: "When Unexistent kind",
 			args: args{
 				k: Kind(-1),
 			},
-			want: Build(KindUnexpected()),
+			want: Build(WithID(id)),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Build(WithKind(tt.args.k), WithID(id)); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("WithKind() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetFirstNestedError(t *testing.T) {
+	id := "dummy-id"
+	firstErr := fmt.Errorf("first error")
+	type args struct {
+		e error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "nested error return first error",
+			args: args{
+				e: Build(
+					WithError(Build(WithError(firstErr), WithID(id))),
+				),
+			},
+			wantErr: Build(WithError(firstErr), WithID(id)),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Build(WithKind(tt.args.k)); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("WithKind() = %v, want %v", got, tt.want)
+			if err := GetFirstNestedError(tt.args.e); !Equal(err, tt.wantErr) {
+				t.Errorf("GetFirstNestedError() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -47,6 +47,7 @@ components:
           type: string
     Error:
       required:
+        - id
         - timestamp
         - status
         - error
@@ -54,6 +55,8 @@ components:
         - path
       type: object
       properties:
+        id:
+          type: string
         timestamp:
           type: string
           format: date-time
