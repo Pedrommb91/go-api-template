@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/internal/api/errors/mocks"
+	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
+	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -17,10 +19,9 @@ import (
 )
 
 func Test_client_GetHelloWorldHandler(t *testing.T) {
-	dummyID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
-	errors.NewUUID = func() uuid.UUID {
-		return uuid.FromStringOrNil(dummyID)
-	}
+	now := time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
+	errors.NewUUID = func() uuid.UUID { return uuid.FromStringOrNil(dummyErrID) }
 
 	type fields struct {
 		cfg *config.Config
@@ -52,11 +53,35 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		{
+			name: "D. Sebastian greeting not found",
+			fields: fields{
+				cfg: &config.Config{},
+				log: logger.New("info"),
+			},
+			args: args{
+				name: "D. Sebastian",
+			},
+			wantCode:         http.StatusNotFound,
+			expectedResponse: nil,
+			expectedErr: &openapi.Error{
+				Error:     "Not Found",
+				Id:        dummyErrID,
+				Message:   "D. Sebastian did not appear yet",
+				Path:      "/api/v1/greeting/D. Sebastian",
+				Status:    http.StatusNotFound,
+				Timestamp: now,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			clock := mocks.NewClock(t)
+			clock.On("Now").Return(now).Maybe()
+
 			r := gin.Default()
-			g := NewClient(tt.fields.cfg, tt.fields.log, mocks.NewErrorSender(t))
+			g := NewClient(tt.fields.cfg, tt.fields.log)
+			r.Use(middlewares.ErrorHandler(clock))
 			r.GET("/api/v1/greeting/"+tt.args.name, func(c *gin.Context) {
 				g.GetHelloWorldHandler(c, tt.args.name)
 			})
@@ -69,7 +94,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 
 			if w.Code == http.StatusOK {
 				response := &openapi.Greeting{}
-				if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+				if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 					t.Errorf("Failed to decode message: %d", err)
 					t.FailNow()
 				}
@@ -77,7 +102,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 				assert.Equal(t, tt.expectedResponse, response)
 			} else {
 				response := &openapi.Error{}
-				if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+				if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 					t.Errorf("Failed to decode message: %d", err)
 					t.FailNow()
 				}
