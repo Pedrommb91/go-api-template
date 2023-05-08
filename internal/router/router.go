@@ -14,7 +14,7 @@ func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config) {
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 
-	engine.Use(middlewares.ErrorHandler(&clock.RealClock{}))
+	engine.Use(middlewares.ErrorHandler(&clock.RealClock{}, l))
 
 	mid := make([]openapi.MiddlewareFunc, 0)
 	opt := openapi.GinServerOptions{

@@ -81,7 +81,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 
 			r := gin.Default()
 			g := NewClient(tt.fields.cfg, tt.fields.log)
-			r.Use(middlewares.ErrorHandler(clock))
+			r.Use(middlewares.ErrorHandler(clock, tt.fields.log))
 			r.GET("/api/v1/greeting/"+tt.args.name, func(c *gin.Context) {
 				g.GetHelloWorldHandler(c, tt.args.name)
 			})
