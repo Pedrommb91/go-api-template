@@ -2,19 +2,52 @@ package errors
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
+	"github.com/Pedrommb91/go-api-template/pkg/clock"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 
-var Now = time.Now
+//go:generate mockery --name ErrorSender
+type ErrorSender interface {
+	AbortWithStatusJSON(ctx *gin.Context, err error)
+	JSON(ctx *gin.Context, err error)
+	JSONWithStatus(ctx *gin.Context, err error, status int)
+}
 
-func NewError(ctx *gin.Context, err error) *openapi.Error {
+type APIError struct {
+	clock clock.Clock
+}
+
+func NewErrorSender(clock clock.Clock) *APIError {
+	return &APIError{
+		clock: clock,
+	}
+}
+
+func (ae *APIError) AbortWithStatusJSON(ctx *gin.Context, err error) {
+	e := errors.GetFirstNestedError(err)
+	er := newError(ctx, e, ae.clock)
+	ctx.AbortWithStatusJSON(int(er.Status), er)
+}
+
+func (ae *APIError) JSON(ctx *gin.Context, err error) {
+	e := errors.GetFirstNestedError(err)
+	er := newError(ctx, e, ae.clock)
+	ctx.JSON(int(er.Status), er)
+}
+
+func (ae *APIError) JSONWithStatus(ctx *gin.Context, err error, status int) {
+	e := errors.GetFirstNestedError(err)
+	er := newError(ctx, e, ae.clock)
+	ctx.JSON(status, er)
+}
+
+func newError(ctx *gin.Context, err error, clock clock.Clock) *openapi.Error {
 	er, ok := err.(*errors.Error)
 	if !ok {
-		return unexpectedError(ctx)
+		return unexpectedError(ctx, clock)
 	}
 	return &openapi.Error{
 		Id:        er.ID,
@@ -22,34 +55,15 @@ func NewError(ctx *gin.Context, err error) *openapi.Error {
 		Message:   er.Message,
 		Path:      ctx.FullPath(),
 		Status:    int32(er.Kind.Int()),
-		Timestamp: Now(),
+		Timestamp: clock.Now(),
 	}
 }
 
-func AbortWithStatusJSON(ctx *gin.Context, err error) {
-	e := errors.GetFirstNestedError(err)
-	er := NewError(ctx, e)
-	ctx.AbortWithStatusJSON(int(er.Status), er)
-}
-
-func JSON(ctx *gin.Context, err error) {
-	e := errors.GetFirstNestedError(err)
-	er := NewError(ctx, e)
-	ctx.JSON(int(er.Status), er)
-}
-
-func JSONWithStatus(ctx *gin.Context, err error, status int) {
-	e := errors.GetFirstNestedError(err)
-	er := NewError(ctx, e)
-	ctx.JSON(status, er)
-}
-
-func unexpectedError(ctx *gin.Context) *openapi.Error {
+func unexpectedError(ctx *gin.Context, clock clock.Clock) *openapi.Error {
 	return &openapi.Error{
-		Error:     errors.Unexpected.String(),
-		Message:   "Unexpected error occurred",
-		Path:      ctx.FullPath(),
-		Status:    http.StatusInternalServerError,
-		Timestamp: Now(),
+		Error:   errors.Unexpected.String(),
+		Message: "Unexpected error occurred",
+		Path:    ctx.FullPath(),
+		Status:  http.StatusInternalServerError,
 	}
 }

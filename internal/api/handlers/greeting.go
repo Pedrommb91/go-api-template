@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
+	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,14 +13,11 @@ import (
 func (g *client) GetHelloWorldHandler(c *gin.Context, name string) {
 	if name == "D. Sebastian" {
 		msg := "D. Sebastian did not appear yet"
-		g.log.Error(msg)
-		c.JSON(http.StatusInternalServerError, &openapi.Error{
-			Error:     "Not returned",
-			Message:   msg,
-			Path:      "/greeting/" + name,
-			Status:    500,
-			Timestamp: time.Now(),
-		})
+		g.errorSender.JSON(c, errors.Build(
+			errors.WithError(fmt.Errorf("not returned")),
+			errors.WithMessage(msg),
+			errors.KindNotFound(),
+		))
 		return
 	}
 

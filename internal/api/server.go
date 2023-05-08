@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
+	"github.com/Pedrommb91/go-api-template/internal/api/errors"
 	"github.com/Pedrommb91/go-api-template/internal/router"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-contrib/cors"
@@ -20,13 +21,14 @@ import (
 )
 
 type Server struct {
-	cfg    *config.Config
-	log    *logger.Logger
-	engine *gin.Engine
-	server *http.Server
+	cfg         *config.Config
+	log         *logger.Logger
+	engine      *gin.Engine
+	server      *http.Server
+	errorSender errors.ErrorSender
 }
 
-func NewServer(c *config.Config, l *logger.Logger) *Server {
+func NewServer(c *config.Config, l *logger.Logger, es errors.ErrorSender) *Server {
 	handler := gin.New()
 	return &Server{
 		cfg:    c,
@@ -37,6 +39,7 @@ func NewServer(c *config.Config, l *logger.Logger) *Server {
 			Handler:           handler,
 			ReadHeaderTimeout: time.Second * 30,
 		},
+		errorSender: es,
 	}
 }
 
@@ -55,7 +58,7 @@ func (s *Server) ServerConfigure() {
 }
 
 func (s *Server) SetRoutes() {
-	router.NewRouter(s.engine, s.log, s.cfg)
+	router.NewRouter(s.engine, s.log, s.cfg, s.errorSender)
 }
 
 func (s *Server) Run() {
