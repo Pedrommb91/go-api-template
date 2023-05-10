@@ -245,3 +245,8 @@ __debug_bin
 
 # binaries
 bin/*
+
+# .ent
+ent/*
+!ent/schema/
+!ent/generate.go

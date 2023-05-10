@@ -18,6 +18,7 @@ install-dependencies:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.4
 	go install github.com/vektra/mockery/v2@v2.20.0
+	go get -d entgo.io/ent/cmd/ent
 
 check-formatting: ## check formatting with linter
 	golangci-lint run
@@ -37,3 +38,6 @@ lint: generate
 
 build: generate 
 	go build -o bin/app cmd/app/main.go
+
+local-postgres: ## run local postgres container
+	docker-compose up -d postgres
