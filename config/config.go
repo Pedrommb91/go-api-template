@@ -9,9 +9,10 @@ import (
 
 type (
 	Config struct {
-		App `mapstructure:"app"`
-		Log `mapstructure:"logger"`
-		API `mapstructure:"api"`
+		App      `mapstructure:"app"`
+		Log      `mapstructure:"logger"`
+		API      `mapstructure:"api"`
+		Database `mapstructure:"database"`
 	}
 
 	App struct {
@@ -26,6 +27,16 @@ type (
 	API struct {
 		CORSAllowOrigins []string `env-required:"true" mapstructure:"cors_allow_origins" env:"API_CORS_ALLOW_ORIGINS"`
 		Address          string   `env-required:"true" mapstructure:"address" env:"API_ADDRESS"`
+	}
+
+	Database struct {
+		Host     string `env-required:"true" mapstructure:"host" env:"DATABASE_HOST"`
+		Port     string `env-required:"true" mapstructure:"port" env:"DATABASE_PORT"`
+		User     string `env-required:"true" mapstructure:"user" env:"DATABASE_USER"`
+		DbName   string `env-required:"true" mapstructure:"dbname" env:"DATABASE_DBNAME"`
+		Password string `env-required:"true" mapstructure:"password" env:"DATABASE_PASSWORD"`
+		SslMode  string `env-required:"true" mapstructure:"sslmode" env:"DATABASE_SSLMODE"`
+		Schema   string `env-required:"true" mapstructure:"schema" env:"DATABASE_SCHEMA"`
 	}
 )
 

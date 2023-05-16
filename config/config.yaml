@@ -9,3 +9,12 @@ api:
   cors_allow_origins: ''
   address: ':8080'
 
+database:
+  host:
+  port:
+  user:
+  dbname:
+  password:
+  sslmode:
+  schema:
+

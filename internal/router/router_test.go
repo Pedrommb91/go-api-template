@@ -6,6 +6,7 @@ import (
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func TestNewRouter(t *testing.T) {
@@ -13,6 +14,7 @@ func TestNewRouter(t *testing.T) {
 		engine *gin.Engine
 		l      logger.Interface
 		cfg    *config.Config
+		db     *gorm.DB
 	}
 	tests := []struct {
 		name string
@@ -24,12 +26,13 @@ func TestNewRouter(t *testing.T) {
 				engine: &gin.Engine{RouterGroup: gin.New().RouterGroup},
 				l:      logger.New("info"),
 				cfg:    &config.Config{},
+				db:     nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			NewRouter(tt.args.engine, tt.args.l, tt.args.cfg)
+			NewRouter(tt.args.engine, tt.args.l, tt.args.cfg, tt.args.db)
 			if len(tt.args.engine.Handlers) == 0 {
 				t.Errorf("Failed to register handlers")
 			}

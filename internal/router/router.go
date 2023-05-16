@@ -8,9 +8,10 @@ import (
 	"github.com/Pedrommb91/go-api-template/pkg/clock"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config) {
+func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *gorm.DB) {
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 
@@ -21,5 +22,5 @@ func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config) {
 		BaseURL:     "/api/v1/",
 		Middlewares: mid,
 	}
-	openapi.RegisterHandlersWithOptions(engine, handlers.NewClient(cfg, l), opt)
+	openapi.RegisterHandlersWithOptions(engine, handlers.NewClient(cfg, l, db), opt)
 }

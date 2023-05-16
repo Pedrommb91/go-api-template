@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func Test_client_GetHelloWorldHandler(t *testing.T) {
@@ -29,6 +30,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	}
 	type args struct {
 		name string
+		db   *gorm.DB
 	}
 	tests := []struct {
 		name             string
@@ -46,6 +48,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "user",
+				db:   nil,
 			},
 			wantCode: http.StatusOK,
 			expectedResponse: &openapi.Greeting{
@@ -61,6 +64,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "D. Sebastian",
+				db:   nil,
 			},
 			wantCode:         http.StatusNotFound,
 			expectedResponse: nil,
@@ -80,7 +84,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			clock.On("Now").Return(now).Maybe()
 
 			r := gin.Default()
-			g := NewClient(tt.fields.cfg, tt.fields.log)
+			g := NewClient(tt.fields.cfg, tt.fields.log, tt.args.db)
 			r.Use(middlewares.ErrorHandler(clock, tt.fields.log))
 			r.GET("/api/v1/greeting/"+tt.args.name, func(c *gin.Context) {
 				g.GetHelloWorldHandler(c, tt.args.name)
