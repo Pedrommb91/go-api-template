@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
+	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/internal/router"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-contrib/cors"
@@ -54,8 +55,8 @@ func (s *Server) ServerConfigure() {
 	})
 }
 
-func (s *Server) SetRoutes() {
-	router.NewRouter(s.engine, s.log, s.cfg)
+func (s *Server) SetRoutes(db *ent.Client) {
+	router.NewRouter(s.engine, s.log, s.cfg, db)
 }
 
 func (s *Server) Run() {

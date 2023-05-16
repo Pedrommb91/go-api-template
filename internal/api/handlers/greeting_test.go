@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
+	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
 	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
@@ -29,6 +30,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	}
 	type args struct {
 		name string
+		db   *ent.Client
 	}
 	tests := []struct {
 		name             string
@@ -46,6 +48,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "user",
+				db:   nil,
 			},
 			wantCode: http.StatusOK,
 			expectedResponse: &openapi.Greeting{
@@ -61,6 +64,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "D. Sebastian",
+				db:   nil,
 			},
 			wantCode:         http.StatusNotFound,
 			expectedResponse: nil,
@@ -80,7 +84,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			clock.On("Now").Return(now).Maybe()
 
 			r := gin.Default()
-			g := NewClient(tt.fields.cfg, tt.fields.log)
+			g := NewClient(tt.fields.cfg, tt.fields.log, tt.args.db)
 			r.Use(middlewares.ErrorHandler(clock, tt.fields.log))
 			r.GET("/api/v1/greeting/"+tt.args.name, func(c *gin.Context) {
 				g.GetHelloWorldHandler(c, tt.args.name)

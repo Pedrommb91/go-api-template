@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "program": "${fileDirname}/__debug_bin",
             "preLaunchTask": "go: build",
-            //"envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "name": "Launch Debug",
@@ -22,7 +22,7 @@
             "console": "integratedTerminal",
             "program": "${workspaceFolder}/__debug_bin",
             "preLaunchTask": "go: build (debug)",
-            //"envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  postgres:
+    container_name: postgres
+    image: library/postgres:15.1-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: strong-pw
+      POSTGRES_DB: db

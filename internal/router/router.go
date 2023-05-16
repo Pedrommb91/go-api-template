@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/Pedrommb91/go-api-template/config"
+	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/internal/api/handlers"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
@@ -10,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config) {
+func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *ent.Client) {
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 
@@ -21,5 +22,5 @@ func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config) {
 		BaseURL:     "/api/v1/",
 		Middlewares: mid,
 	}
-	openapi.RegisterHandlersWithOptions(engine, handlers.NewClient(cfg, l), opt)
+	openapi.RegisterHandlersWithOptions(engine, handlers.NewClient(cfg, l, db), opt)
 }
