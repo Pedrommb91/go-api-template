@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/internal/router"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -55,7 +55,7 @@ func (s *Server) ServerConfigure() {
 	})
 }
 
-func (s *Server) SetRoutes(db *ent.Client) {
+func (s *Server) SetRoutes(db *gorm.DB) {
 	router.NewRouter(s.engine, s.log, s.cfg, db)
 }
 

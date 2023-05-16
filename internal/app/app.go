@@ -14,7 +14,6 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
 
 	server := api.NewServer(cfg, l)
 	server.ServerConfigure()

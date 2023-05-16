@@ -35,6 +35,8 @@ type (
 		User     string `env-required:"true" mapstructure:"user" env:"DATABASE_USER"`
 		DbName   string `env-required:"true" mapstructure:"dbname" env:"DATABASE_DBNAME"`
 		Password string `env-required:"true" mapstructure:"password" env:"DATABASE_PASSWORD"`
+		SslMode  string `env-required:"true" mapstructure:"sslmode" env:"DATABASE_SSLMODE"`
+		Schema   string `env-required:"true" mapstructure:"schema" env:"DATABASE_SCHEMA"`
 	}
 )
 

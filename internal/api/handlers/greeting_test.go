@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
 	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
@@ -17,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func Test_client_GetHelloWorldHandler(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	}
 	type args struct {
 		name string
-		db   *ent.Client
+		db   *gorm.DB
 	}
 	tests := []struct {
 		name             string

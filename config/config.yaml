@@ -15,4 +15,6 @@ database:
   user:
   dbname:
   password:
+  sslmode:
+  schema:
 

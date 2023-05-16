@@ -3,28 +3,36 @@ package database
 import (
 	"fmt"
 
-	"entgo.io/ent/dialect"
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/rs/zerolog"
-
-	_ "github.com/lib/pq" // postgres driver - import needed
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // OpenPostgres
 // Must close client
-func OpenPostgres(cfg config.Database) (*ent.Client, error) {
+func OpenPostgres(cfg config.Database) (*gorm.DB, error) {
 	const op errors.Op = "database.Open"
-	conStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s", cfg.Host, cfg.Port, cfg.User, cfg.DbName, cfg.Password)
-	client, err := ent.Open(dialect.Postgres, conStr)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=%s",
+		cfg.Host,
+		cfg.User,
+		cfg.Password,
+		cfg.DbName,
+		cfg.Port,
+		cfg.Schema,
+		cfg.SslMode)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
 	if err != nil {
 		return nil, errors.Build(
 			errors.WithOp(op),
 			errors.WithError(err),
-			errors.WithMessage("Failed to open database"),
+			errors.WithMessage("Failed to connect to database"),
 			errors.WithSeverity(zerolog.FatalLevel),
 		)
 	}
-	return client, nil
+
+	return db, nil
 }

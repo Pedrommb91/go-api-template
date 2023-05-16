@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/ent"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func TestNewRouter(t *testing.T) {
@@ -14,7 +14,7 @@ func TestNewRouter(t *testing.T) {
 		engine *gin.Engine
 		l      logger.Interface
 		cfg    *config.Config
-		db     *ent.Client
+		db     *gorm.DB
 	}
 	tests := []struct {
 		name string
