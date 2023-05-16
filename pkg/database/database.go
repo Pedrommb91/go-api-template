@@ -11,8 +11,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// OpenPostgres
-// Must close client
 func OpenPostgres(cfg config.Database) (*gorm.DB, error) {
 	const op errors.Op = "database.Open"
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=%s",
