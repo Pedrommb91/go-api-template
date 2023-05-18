@@ -10,7 +10,7 @@ import (
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
-	db, err := database.OpenPostgres(cfg.Database)
+	db, err := database.OpenSql(cfg.Database)
 	if err != nil {
 		panic(err)
 	}

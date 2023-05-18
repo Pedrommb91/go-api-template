@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 	"os"
 	"syscall"
@@ -10,7 +11,6 @@ import (
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func TestServer_Run(t *testing.T) {
@@ -22,7 +22,7 @@ func TestServer_Run(t *testing.T) {
 		server *http.Server
 	}
 	type args struct {
-		db *gorm.DB
+		db *sql.DB
 	}
 	tests := []struct {
 		name   string

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -16,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
 func Test_client_GetHelloWorldHandler(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	}
 	type args struct {
 		name string
-		db   *gorm.DB
+		db   *sql.DB
 	}
 	tests := []struct {
 		name             string

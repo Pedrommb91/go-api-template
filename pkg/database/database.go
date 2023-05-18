@@ -1,19 +1,19 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/rs/zerolog"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+
+	_ "github.com/lib/pq"
 )
 
-func OpenPostgres(cfg config.Database) (*gorm.DB, error) {
-	const op errors.Op = "database.Open"
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=%s",
+func OpenSql(cfg config.Database) (*sql.DB, error) {
+	const op errors.Op = "database.OpenSql"
+	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=%s",
 		cfg.Host,
 		cfg.User,
 		cfg.Password,
@@ -22,7 +22,8 @@ func OpenPostgres(cfg config.Database) (*gorm.DB, error) {
 		cfg.Schema,
 		cfg.SslMode)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Error)})
+	// Connect to database
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, errors.Build(
 			errors.WithOp(op),

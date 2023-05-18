@@ -1,6 +1,8 @@
 package router
 
 import (
+	"database/sql"
+
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/internal/api/handlers"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
@@ -8,10 +10,9 @@ import (
 	"github.com/Pedrommb91/go-api-template/pkg/clock"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *gorm.DB) {
+func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *sql.DB) {
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 

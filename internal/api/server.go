@@ -7,6 +7,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -17,7 +18,6 @@ import (
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -25,10 +25,10 @@ type Server struct {
 	log    *logger.Logger
 	engine *gin.Engine
 	server *http.Server
-	db     *gorm.DB
+	db     *sql.DB
 }
 
-func NewServer(c *config.Config, l *logger.Logger, db *gorm.DB) *Server {
+func NewServer(c *config.Config, l *logger.Logger, db *sql.DB) *Server {
 	handler := gin.New()
 	return &Server{
 		cfg:    c,
