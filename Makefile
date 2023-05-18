@@ -5,7 +5,6 @@ export LC_ALL=en_US.UTF-8
 -include .env
 export $(shell sed 's/=.*//' .env)
 
-
 .PHONY: help
 help: ## Help command
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n"} /^[$$()% a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -41,3 +40,15 @@ build: generate
 
 local-postgres: ## run local postgres container
 	docker-compose up -d postgres
+
+local-down: ## run local postgres container
+	docker-compose down
+
+new-migration:
+	atlas migrate new --edit
+
+migrate:
+	atlas migrate apply --url postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DBNAME}?sslmode=${DATABASE_SSLMODE}
+
+migrate-status:
+	atlas migrate status --url postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DBNAME}?sslmode=${DATABASE_SSLMODE}
