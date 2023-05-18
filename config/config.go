@@ -33,7 +33,7 @@ type (
 		Host     string `env-required:"true" mapstructure:"host" env:"DATABASE_HOST"`
 		Port     string `env-required:"true" mapstructure:"port" env:"DATABASE_PORT"`
 		User     string `env-required:"true" mapstructure:"user" env:"DATABASE_USER"`
-		DbName   string `env-required:"true" mapstructure:"dbname" env:"DATABASE_DBNAME"`
+		DBName   string `env-required:"true" mapstructure:"dbname" env:"DATABASE_DBNAME"`
 		Password string `env-required:"true" mapstructure:"password" env:"DATABASE_PASSWORD"`
 		SslMode  string `env-required:"true" mapstructure:"sslmode" env:"DATABASE_SSLMODE"`
 		Schema   string `env-required:"true" mapstructure:"schema" env:"DATABASE_SCHEMA"`

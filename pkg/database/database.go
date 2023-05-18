@@ -17,7 +17,7 @@ func OpenPostgres(cfg config.Database) (*gorm.DB, error) {
 		cfg.Host,
 		cfg.User,
 		cfg.Password,
-		cfg.DbName,
+		cfg.DBName,
 		cfg.Port,
 		cfg.Schema,
 		cfg.SslMode)
