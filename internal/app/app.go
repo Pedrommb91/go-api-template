@@ -9,11 +9,7 @@ import (
 
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
-
-	db, err := database.OpenSql(cfg.Database)
-	if err != nil {
-		panic(err)
-	}
+	db := database.OpenPostgresOrDie(cfg.Database)
 
 	server := api.NewServer(cfg, l, db)
 	server.ServerConfigure()
