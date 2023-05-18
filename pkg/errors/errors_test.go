@@ -7,10 +7,14 @@ import (
 
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/rs/zerolog"
+	uuid "github.com/satori/go.uuid"
 )
 
 func TestBuild(t *testing.T) {
-	id := "dummy-id"
+	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
+	NewUUID = func() uuid.UUID {
+		return uuid.FromStringOrNil(dummyErrID)
+	}
 	type args struct {
 		ops []ErrorOption
 	}
@@ -21,12 +25,12 @@ func TestBuild(t *testing.T) {
 	}{
 		{
 			name: "When dont send an error",
-			args: args{[]ErrorOption{WithID(id)}},
+			args: args{[]ErrorOption{}},
 			want: &Error{
 				Kind:     Unexpected,
 				Err:      fmt.Errorf("no error"),
-				Severity: zerolog.DebugLevel,
-				ID:       id,
+				Severity: zerolog.WarnLevel,
+				ID:       dummyErrID,
 				Op:       "No operation found",
 				Message:  "No message",
 			},
@@ -40,10 +44,25 @@ func TestBuild(t *testing.T) {
 			want: &Error{
 				Err:      fmt.Errorf("no error"),
 				Kind:     Forbidden,
-				ID:       id,
+				ID:       dummyErrID,
 				Severity: zerolog.WarnLevel,
 				Op:       "No operation found",
 				Message:  "No message",
+			},
+		},
+		{
+			name: "When send an error with message and id",
+			args: args{[]ErrorOption{
+				WithMessage("test-message"),
+				WithID("dummy-id"),
+			}},
+			want: &Error{
+				Err:      fmt.Errorf("no error"),
+				Kind:     Unexpected,
+				ID:       "dummy-id",
+				Severity: zerolog.WarnLevel,
+				Op:       "No operation found",
+				Message:  "test-message",
 			},
 		},
 	}
@@ -179,8 +198,8 @@ func TestEqual(t *testing.T) {
 		KindBadRequest(),
 	)
 	type args struct {
-		e1 *Error
-		e2 *Error
+		e1 error
+		e2 error
 	}
 	tests := []struct {
 		name string
@@ -200,6 +219,16 @@ func TestEqual(t *testing.T) {
 		{
 			name: "When error are different",
 			args: args{err, err2},
+			want: false,
+		},
+		{
+			name: "When error are nil",
+			args: args{nil, nil},
+			want: true,
+		},
+		{
+			name: "When error are nil",
+			args: args{err, fmt.Errorf("Internal Server Error")},
 			want: false,
 		},
 	}
@@ -306,7 +335,10 @@ func TestKind_Int(t *testing.T) {
 }
 
 func TestWithKind(t *testing.T) {
-	id := "dummy-id"
+	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
+	NewUUID = func() uuid.UUID {
+		return uuid.FromStringOrNil(dummyErrID)
+	}
 	type args struct {
 		k Kind
 	}
@@ -320,14 +352,14 @@ func TestWithKind(t *testing.T) {
 			args: args{
 				k: Unexpected,
 			},
-			want: Build(WithID(id)),
+			want: Build(),
 		},
 		{
 			name: "When Not Found",
 			args: args{
 				k: NotFound,
 			},
-			want: Build(KindNotFound(), WithID(id)),
+			want: Build(KindNotFound()),
 		},
 
 		{
@@ -335,48 +367,69 @@ func TestWithKind(t *testing.T) {
 			args: args{
 				k: InternalServerError,
 			},
-			want: Build(KindInternalServerError(), WithID(id)),
+			want: Build(KindInternalServerError()),
 		},
 		{
 			name: "When Bad request",
 			args: args{
 				k: BadRequest,
 			},
-			want: Build(KindBadRequest(), WithID(id)),
+			want: Build(KindBadRequest()),
 		},
 		{
 			name: "When Bad gateway",
 			args: args{
 				k: BadGateway,
 			},
-			want: Build(KindBadGateway(), WithID(id)),
+			want: Build(KindBadGateway()),
 		},
 		{
 			name: "When Unauthorized",
 			args: args{
 				k: Unauthorized,
 			},
-			want: Build(KindUnauthorized(), WithID(id)),
+			want: Build(KindUnauthorized()),
 		},
 		{
 			name: "When No Content",
 			args: args{
 				k: NoContent,
 			},
-			want: Build(KindNoContent(), WithID(id)),
+			want: Build(KindNoContent()),
 		},
 		{
 			name: "When Unexistent kind",
 			args: args{
 				k: Kind(-1),
 			},
-			want: Build(WithID(id)),
+			want: Build(),
+		},
+		{
+			name: "When Unexpected",
+			args: args{
+				k: Unexpected,
+			},
+			want: Build(KindUnexpected()),
+		},
+		{
+			name: "When Conflict",
+			args: args{
+				k: Conflict,
+			},
+			want: Build(KindConflict()),
+		},
+		{
+			name: "When RequestTimeout",
+			args: args{
+				k: RequestTimeout,
+			},
+			want: Build(KindRequestTimout()),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Build(WithKind(tt.args.k), WithID(id)); !reflect.DeepEqual(got, tt.want) {
+			if got := Build(WithKind(tt.args.k)); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("WithKind() = %v, want %v", got, tt.want)
 			}
 		})
@@ -384,7 +437,10 @@ func TestWithKind(t *testing.T) {
 }
 
 func TestGetFirstNestedError(t *testing.T) {
-	id := "dummy-id"
+	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
+	NewUUID = func() uuid.UUID {
+		return uuid.FromStringOrNil(dummyErrID)
+	}
 	firstErr := fmt.Errorf("first error")
 	type args struct {
 		e error
@@ -398,16 +454,60 @@ func TestGetFirstNestedError(t *testing.T) {
 			name: "nested error return first error",
 			args: args{
 				e: Build(
-					WithError(Build(WithError(firstErr), WithID(id))),
+					WithError(Build(WithError(firstErr))),
 				),
 			},
-			wantErr: Build(WithError(firstErr), WithID(id)),
+			wantErr: Build(WithError(firstErr)),
+		},
+		{
+			name: "native error",
+			args: args{
+				e: fmt.Errorf("test error"),
+			},
+			wantErr: fmt.Errorf("test error"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := GetFirstNestedError(tt.args.e); !Equal(err, tt.wantErr) {
 				t.Errorf("GetFirstNestedError() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestWithNestedErrorCopy(t *testing.T) {
+	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
+	NewUUID = func() uuid.UUID {
+		return uuid.FromStringOrNil(dummyErrID)
+	}
+	err := Build(
+		WithOp("tests"),
+		WithError(fmt.Errorf("Internal Server Error")),
+		WithMessage("Nested error message"),
+		WithSeverity(zerolog.ErrorLevel),
+	)
+
+	type args struct {
+		err error
+	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{
+			name: "Copy nested error",
+			args: args{
+				err: err,
+			},
+			want: err,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Build(WithNestedErrorCopy(tt.args.err)); !Equal(got.Err, tt.want) {
+				t.Errorf("WithNestedErrorCopy() = %v, want %v", got, tt.want)
 			}
 		})
 	}

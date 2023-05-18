@@ -82,7 +82,7 @@ func KindNotFound() ErrorOption {
 	}
 }
 
-func KindConflit() ErrorOption {
+func KindConflict() ErrorOption {
 	return func(e *Error) {
 		e.Kind = Conflict
 	}
@@ -124,26 +124,36 @@ func WithSeverity(s zerolog.Level) ErrorOption {
 }
 
 func WithError(err error) ErrorOption {
-	er, ok := err.(*Error)
-	var id string
-
-	if ok {
-		id = er.ID
-	} else {
-		id = generateID()
-	}
-
 	return func(e *Error) {
+		er, ok := err.(*Error)
+		if ok {
+			e.ID = er.ID
+		} else {
+			e.ID = generateID()
+		}
+
 		e.Err = err
-		e.ID = id
+	}
+}
+
+// WithNestedErrorCopy copy id, kind, severity and message from the input error
+func WithNestedErrorCopy(err error) ErrorOption {
+	return func(e *Error) {
+		er, ok := err.(*Error)
+		if ok {
+			e.ID = er.ID
+			e.Kind = er.Kind
+			e.Severity = er.Severity
+			e.Message = er.Message
+		} else {
+			e.ID = generateID()
+		}
+
+		e.Err = err
 	}
 }
 
 func WithID(id string) ErrorOption {
-	if id == "" {
-		id = generateID()
-	}
-
 	return func(e *Error) {
 		e.ID = id
 	}
@@ -189,36 +199,26 @@ func (e *Error) Error() string {
 }
 
 func Build(ops ...ErrorOption) *Error {
-	e := &Error{}
-	e.Kind = Unexpected
+	e := newCustomErrorWithDefaults()
 
 	for _, op := range ops {
 		op(e)
 	}
 
-	if e.Err == nil {
-		e.Err = fmt.Errorf("no error")
-	}
-
-	if e.ID == "" {
-		e.ID = generateID()
-	}
-
-	if e.Severity == zerolog.TraceLevel {
-		e.Severity = zerolog.WarnLevel
-	}
-
-	if e.Op == "" {
-		e.Op = "No operation found"
-	}
-
-	if e.Message == "" {
-		e.Message = "No message"
-	}
-
 	LogErrorWithSeverity(logger.New(e.Severity.String()), e.Severity, e)
 
 	return e
+}
+
+func newCustomErrorWithDefaults() *Error {
+	return &Error{
+		Op:       "No operation found",
+		Err:      fmt.Errorf("no error"),
+		Message:  "No message",
+		Kind:     Unexpected,
+		Severity: zerolog.WarnLevel,
+		ID:       generateID(),
+	}
 }
 
 // Creates a list with all recursive operations.
@@ -315,36 +315,11 @@ func Equal(e1 error, e2 error) bool {
 		err1.Kind == err2.Kind &&
 		err1.Op == err2.Op &&
 		err1.Severity == err2.Severity &&
-		err1.Message == err2.Message
+		err1.Message == err2.Message &&
+		err1.ID == err2.ID
 }
 
 func generateID() string {
 	idstr := NewUUID().String()
 	return idstr
-}
-
-// if er is nil it creates an unauthorized error
-func UnauthorizedError(op Op, er error) *Error {
-	if er == nil {
-		er = fmt.Errorf("unauthorized")
-	}
-	return Build(
-		WithOp(op),
-		WithError(er),
-		WithMessage("Unauthorized"),
-		KindUnauthorized(),
-	)
-}
-
-// if er is nil it creates an unexpected error
-func UnexpectedError(op Op, er error) *Error {
-	if er == nil {
-		er = fmt.Errorf("unexpected error")
-	}
-	return Build(
-		WithOp(op),
-		WithError(er),
-		WithMessage("Unexpected error occurred"),
-		WithSeverity(zerolog.ErrorLevel),
-	)
 }
