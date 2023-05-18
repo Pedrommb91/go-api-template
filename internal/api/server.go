@@ -25,9 +25,10 @@ type Server struct {
 	log    *logger.Logger
 	engine *gin.Engine
 	server *http.Server
+	db     *gorm.DB
 }
 
-func NewServer(c *config.Config, l *logger.Logger) *Server {
+func NewServer(c *config.Config, l *logger.Logger, db *gorm.DB) *Server {
 	handler := gin.New()
 	return &Server{
 		cfg:    c,
@@ -38,6 +39,7 @@ func NewServer(c *config.Config, l *logger.Logger) *Server {
 			Handler:           handler,
 			ReadHeaderTimeout: time.Second * 30,
 		},
+		db: db,
 	}
 }
 
@@ -55,8 +57,8 @@ func (s *Server) ServerConfigure() {
 	})
 }
 
-func (s *Server) SetRoutes(db *gorm.DB) {
-	router.NewRouter(s.engine, s.log, s.cfg, db)
+func (s *Server) SetRoutes() {
+	router.NewRouter(s.engine, s.log, s.cfg, s.db)
 }
 
 func (s *Server) Run() {

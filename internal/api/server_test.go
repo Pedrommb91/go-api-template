@@ -53,9 +53,9 @@ func TestServer_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewServer(tt.fields.cfg, tt.fields.log)
+			s := NewServer(tt.fields.cfg, tt.fields.log, tt.args.db)
 			s.ServerConfigure()
-			s.SetRoutes(tt.args.db)
+			s.SetRoutes()
 			go func() {
 				time.Sleep(time.Millisecond * 500)
 				p, err := os.FindProcess(os.Getpid())

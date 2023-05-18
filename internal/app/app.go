@@ -15,8 +15,8 @@ func Run(cfg *config.Config) {
 		panic(err)
 	}
 
-	server := api.NewServer(cfg, l)
+	server := api.NewServer(cfg, l, db)
 	server.ServerConfigure()
-	server.SetRoutes(db)
+	server.SetRoutes()
 	server.Run()
 }
