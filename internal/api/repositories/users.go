@@ -20,7 +20,7 @@ type UsersRepository interface {
 func (p *PostgresDB) GetUsers() ([]*openapi.GetUsersResponse, error) {
 	const op errors.Op = "database.GetUsers"
 
-	users, err := database.Where[*openapi.GetUsersResponse](p.DB).Select("*").From("public.users").Run(mapRowsToGetUsersResponse)
+	users, err := database.Where[*openapi.GetUsersResponse](p.DB).Select("*").From("public.users").WithMapper(NewGetUsersMapper()).Run()
 	if err != nil {
 		return nil, errors.Build(
 			errors.WithOp(op),
@@ -31,21 +31,4 @@ func (p *PostgresDB) GetUsers() ([]*openapi.GetUsersResponse, error) {
 	}
 
 	return users, nil
-}
-
-func mapRowsToGetUsersResponse(rows *sql.Rows) (*openapi.GetUsersResponse, error) {
-	const op errors.Op = "database.mapRowsToGetUsersResponse"
-
-	user := new(openapi.GetUsersResponse)
-	if err := rows.Scan(&user.Id, &user.Name); err != nil {
-		return nil, errors.Build(
-			errors.WithOp(op),
-			errors.WithError(err),
-			errors.WithMessage("Failed to get all users"),
-			errors.KindInternalServerError(),
-			errors.WithSeverity(zerolog.ErrorLevel),
-		)
-	}
-
-	return user, nil
 }
