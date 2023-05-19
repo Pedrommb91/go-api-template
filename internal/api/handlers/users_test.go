@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,6 +37,7 @@ func Test_client_GetUsersHandler(t *testing.T) {
 		fields                fields
 		wantCode              int
 		expectedUsersResponse []*openapi.GetUsersResponse
+		expectedErrorResponse *openapi.Error
 	}{
 		{
 			name: "Valid args return users",
@@ -44,8 +46,14 @@ func Test_client_GetUsersHandler(t *testing.T) {
 				log: logger.New("info"),
 				db:  db,
 			},
-			expectedUsersResponse: make([]*openapi.GetUsersResponse, 0),
-			wantCode:              http.StatusOK,
+			wantCode: http.StatusOK,
+			expectedUsersResponse: []*openapi.GetUsersResponse{
+				{
+					Id:   "1",
+					Name: "test",
+				},
+			},
+			expectedErrorResponse: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -66,6 +74,21 @@ func Test_client_GetUsersHandler(t *testing.T) {
 
 			r.ServeHTTP(w, req)
 			assert.Equal(t, tt.wantCode, w.Code)
+
+			if tt.expectedUsersResponse != nil {
+				var got []*openapi.GetUsersResponse
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Errorf("Failed to unmarshal body: %s", err)
+				}
+				assert.Equal(t, got, tt.expectedUsersResponse)
+			}
+			if tt.expectedErrorResponse != nil {
+				var got *openapi.Error
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Errorf("Failed to unmarshal body: %s", err)
+				}
+				assert.Equal(t, got, tt.expectedErrorResponse)
+			}
 		})
 	}
 }
