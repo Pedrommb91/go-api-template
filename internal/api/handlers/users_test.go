@@ -25,8 +25,6 @@ func Test_client_GetUsersHandler(t *testing.T) {
 	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
 	errors.NewUUID = func() uuid.UUID { return uuid.FromStringOrNil(dummyErrID) }
 
-	db := &repositories.PostgresDB{DB: tests.NewPostgresTestContainer()}
-
 	type fields struct {
 		cfg *config.Config
 		log logger.Interface
@@ -44,7 +42,7 @@ func Test_client_GetUsersHandler(t *testing.T) {
 			fields: fields{
 				cfg: &config.Config{},
 				log: logger.New("info"),
-				db:  db,
+				db:  &repositories.PostgresDB{DB: tests.NewPostgresTestContainerWithInitScript()},
 			},
 			wantCode: http.StatusOK,
 			expectedUsersResponse: []*openapi.GetUsersResponse{
@@ -54,6 +52,24 @@ func Test_client_GetUsersHandler(t *testing.T) {
 				},
 			},
 			expectedErrorResponse: nil,
+		},
+		{
+			name: "Error empty db",
+			fields: fields{
+				cfg: &config.Config{},
+				log: logger.New("info"),
+				db:  &repositories.PostgresDB{DB: tests.NewPostgresTestContainerEmpty()},
+			},
+			wantCode:              http.StatusInternalServerError,
+			expectedUsersResponse: nil,
+			expectedErrorResponse: &openapi.Error{
+				Error:     "Unexpected Error",
+				Id:        dummyErrID,
+				Message:   "Failed to get users",
+				Path:      "/users",
+				Status:    http.StatusInternalServerError,
+				Timestamp: now,
+			},
 		},
 	}
 	for _, tt := range tests {
