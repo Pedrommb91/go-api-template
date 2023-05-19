@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
+	"github.com/Pedrommb91/go-api-template/pkg/database"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -18,7 +19,8 @@ type UsersRepository interface {
 
 func (p *PostgresDB) GetUsers() ([]*openapi.GetUsersResponse, error) {
 	const op errors.Op = "database.GetUsers"
-	rows, err := p.DB.Query("SELECT * FROM public.users")
+
+	users, err := database.Where[*openapi.GetUsersResponse](p.DB).Select("*").From("public.users").Run(mapRowsToGetUsersResponse)
 	if err != nil {
 		return nil, errors.Build(
 			errors.WithOp(op),
@@ -26,18 +28,6 @@ func (p *PostgresDB) GetUsers() ([]*openapi.GetUsersResponse, error) {
 			errors.WithError(err),
 			errors.WithSeverity(zerolog.ErrorLevel),
 		)
-	}
-
-	users := []*openapi.GetUsersResponse{}
-	for rows.Next() {
-		user, err := mapRowsToGetUsersResponse(rows)
-		if err != nil {
-			return nil, errors.Build(
-				errors.WithOp(op),
-				errors.WithNestedErrorCopy(err),
-			)
-		}
-		users = append(users, user)
 	}
 
 	return users, nil
