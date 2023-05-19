@@ -1,19 +1,18 @@
 package router
 
 import (
-	"database/sql"
-
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/internal/api/handlers"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
 	"github.com/Pedrommb91/go-api-template/pkg/clock"
+	"github.com/Pedrommb91/go-api-template/pkg/database"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *sql.DB) {
+func NewRouter(engine *gin.Engine, l logger.Interface, cfg *config.Config, db *database.PostgresDB) {
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 

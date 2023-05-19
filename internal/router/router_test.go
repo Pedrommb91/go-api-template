@@ -1,10 +1,10 @@
 package router
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/Pedrommb91/go-api-template/config"
+	"github.com/Pedrommb91/go-api-template/pkg/database"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +14,7 @@ func TestNewRouter(t *testing.T) {
 		engine *gin.Engine
 		l      logger.Interface
 		cfg    *config.Config
-		db     *sql.DB
+		db     *database.PostgresDB
 	}
 	tests := []struct {
 		name string

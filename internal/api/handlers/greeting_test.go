@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,7 @@ import (
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
 	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
+	"github.com/Pedrommb91/go-api-template/pkg/database"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	}
 	type args struct {
 		name string
-		db   *sql.DB
+		db   *database.PostgresDB
 	}
 	tests := []struct {
 		name             string

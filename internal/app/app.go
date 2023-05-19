@@ -9,7 +9,7 @@ import (
 
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
-	db := database.OpenPostgresOrDie(cfg.Database)
+	db := database.NewPostgresOrDie(cfg.Database)
 
 	server := api.NewServer(cfg, l, db)
 	server.ServerConfigure()

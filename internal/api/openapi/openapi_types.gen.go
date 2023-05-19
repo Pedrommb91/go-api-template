@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-const (
-	BasicAuthScopes = "BasicAuth.Scopes"
-)
-
 // Error defines model for Error.
 type Error struct {
 	Error     string    `json:"error"`
@@ -19,6 +15,12 @@ type Error struct {
 	Path      string    `json:"path"`
 	Status    int32     `json:"status"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+// GetUsersResponse defines model for GetUsersResponse.
+type GetUsersResponse struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // Greeting defines model for Greeting.

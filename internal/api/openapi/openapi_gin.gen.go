@@ -16,6 +16,9 @@ type ServerInterface interface {
 
 	// (GET /greeting/{name})
 	GetHelloWorldHandler(c *gin.Context, name string)
+
+	// (GET /users)
+	GetUsersHandler(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -41,13 +44,21 @@ func (siw *ServerInterfaceWrapper) GetHelloWorldHandler(c *gin.Context) {
 		return
 	}
 
-	c.Set(BasicAuthScopes, []string{""})
-
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
 	siw.Handler.GetHelloWorldHandler(c, name)
+}
+
+// GetUsersHandler operation middleware
+func (siw *ServerInterfaceWrapper) GetUsersHandler(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetUsersHandler(c)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -80,6 +91,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	}
 
 	router.GET(options.BaseURL+"/greeting/:name", wrapper.GetHelloWorldHandler)
+
+	router.GET(options.BaseURL+"/users", wrapper.GetUsersHandler)
 
 	return router
 }
