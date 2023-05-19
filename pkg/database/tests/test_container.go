@@ -9,16 +9,15 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Pedrommb91/go-api-template/pkg/database"
 	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var containerDB *database.PostgresDB
+var containerDB *sql.DB
 
-func NewPostgresTestContainer() *database.PostgresDB {
+func NewPostgresTestContainer() *sql.DB {
 	if containerDB != nil {
 		return containerDB
 	}
@@ -55,6 +54,5 @@ func NewPostgresTestContainer() *database.PostgresDB {
 		log.Fatalf("could not connect to database: %v", err)
 	}
 
-	containerDB = &database.PostgresDB{DB: DB}
-	return containerDB
+	return DB
 }

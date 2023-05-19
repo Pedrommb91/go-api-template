@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/pkg/database"
+	"github.com/Pedrommb91/go-api-template/internal/api/repositories"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +14,7 @@ func TestNewRouter(t *testing.T) {
 		engine *gin.Engine
 		l      logger.Interface
 		cfg    *config.Config
-		db     *database.PostgresDB
+		db     *repositories.PostgresDB
 	}
 	tests := []struct {
 		name string

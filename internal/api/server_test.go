@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Pedrommb91/go-api-template/config"
-	"github.com/Pedrommb91/go-api-template/pkg/database"
+	"github.com/Pedrommb91/go-api-template/internal/api/repositories"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +22,7 @@ func TestServer_Run(t *testing.T) {
 		server *http.Server
 	}
 	type args struct {
-		db *database.PostgresDB
+		db *repositories.PostgresDB
 	}
 	tests := []struct {
 		name   string

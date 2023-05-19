@@ -1,4 +1,4 @@
-package database
+package repositories
 
 import (
 	"database/sql"
@@ -7,6 +7,10 @@ import (
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/rs/zerolog"
 )
+
+type PostgresDB struct {
+	DB *sql.DB
+}
 
 type UsersRepository interface {
 	GetUsers() ([]*openapi.GetUsersResponse, error)

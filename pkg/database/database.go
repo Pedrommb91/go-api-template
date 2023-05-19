@@ -9,11 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type PostgresDB struct {
-	DB *sql.DB
-}
-
-func NewPostgresOrDie(cfg config.Database) *PostgresDB {
+func NewPostgresOrDie(cfg config.Database) *sql.DB {
 	connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s search_path=%s sslmode=%s",
 		cfg.Host,
 		cfg.User,
@@ -29,5 +25,5 @@ func NewPostgresOrDie(cfg config.Database) *PostgresDB {
 		panic(err)
 	}
 
-	return &PostgresDB{DB: db}
+	return db
 }

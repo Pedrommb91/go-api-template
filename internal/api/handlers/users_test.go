@@ -10,8 +10,8 @@ import (
 	"github.com/Pedrommb91/go-api-template/config"
 	"github.com/Pedrommb91/go-api-template/internal/api/middlewares"
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
+	"github.com/Pedrommb91/go-api-template/internal/api/repositories"
 	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
-	"github.com/Pedrommb91/go-api-template/pkg/database"
 	"github.com/Pedrommb91/go-api-template/pkg/database/tests"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
@@ -25,12 +25,12 @@ func Test_client_GetUsersHandler(t *testing.T) {
 	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
 	errors.NewUUID = func() uuid.UUID { return uuid.FromStringOrNil(dummyErrID) }
 
-	db := tests.NewPostgresTestContainer()
+	db := &repositories.PostgresDB{DB: tests.NewPostgresTestContainer()}
 
 	type fields struct {
 		cfg *config.Config
 		log logger.Interface
-		db  *database.PostgresDB
+		db  *repositories.PostgresDB
 	}
 	tests := []struct {
 		name                  string
