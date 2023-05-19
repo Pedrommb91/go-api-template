@@ -16,14 +16,19 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
+var containerDB *database.PostgresDB
+
 func NewPostgresTestContainer() *database.PostgresDB {
+	if containerDB != nil {
+		return containerDB
+	}
 	ctx := context.Background()
 
 	path, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
+		return nil
 	}
-	fmt.Println(path)
 
 	container, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:13-alpine"),
@@ -50,5 +55,6 @@ func NewPostgresTestContainer() *database.PostgresDB {
 		log.Fatalf("could not connect to database: %v", err)
 	}
 
-	return &database.PostgresDB{DB: DB}
+	containerDB = &database.PostgresDB{DB: DB}
+	return containerDB
 }

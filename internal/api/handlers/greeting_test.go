@@ -12,6 +12,7 @@ import (
 	"github.com/Pedrommb91/go-api-template/internal/api/openapi"
 	"github.com/Pedrommb91/go-api-template/pkg/clock/mocks"
 	"github.com/Pedrommb91/go-api-template/pkg/database"
+	"github.com/Pedrommb91/go-api-template/pkg/database/tests"
 	"github.com/Pedrommb91/go-api-template/pkg/errors"
 	"github.com/Pedrommb91/go-api-template/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,8 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 	now := time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 	dummyErrID := "e157f89f-abd0-4b1a-bc58-de8bd8fd04cd"
 	errors.NewUUID = func() uuid.UUID { return uuid.FromStringOrNil(dummyErrID) }
+
+	db := tests.NewPostgresTestContainer()
 
 	type fields struct {
 		cfg *config.Config
@@ -48,7 +51,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "user",
-				db:   nil,
+				db:   db,
 			},
 			wantCode: http.StatusOK,
 			expectedResponse: &openapi.Greeting{
@@ -64,7 +67,7 @@ func Test_client_GetHelloWorldHandler(t *testing.T) {
 			},
 			args: args{
 				name: "D. Sebastian",
-				db:   nil,
+				db:   db,
 			},
 			wantCode:         http.StatusNotFound,
 			expectedResponse: nil,
